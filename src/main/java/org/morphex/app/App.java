@@ -2,6 +2,7 @@ package org.morphex.app;
 
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
+import twitter4j.conf.ConfigurationBuilder;
 import java.util.List;
 import java.io.*;
 
@@ -14,9 +15,11 @@ public class App
     public static void main( String[] args )
     {
         System.out.println("Starting Twitter dump");
+	ConfigurationBuilder config = new ConfigurationBuilder();
+	config.setTweetModeExtended(true);
 	try {
 	        setup_credentials();
-		Twitter twitter = new TwitterFactory().getInstance();
+		Twitter twitter = new TwitterFactory(config.build()).getInstance();
 		set_access_tokens(twitter);
 		System.out.println("Statuses:");
 		for (Status status : twitter.getUserTimeline()) {
