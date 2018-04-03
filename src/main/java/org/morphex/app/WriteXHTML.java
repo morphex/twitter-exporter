@@ -13,6 +13,21 @@ public class WriteXHTML {
 
 	public static void main(String[] args)  throws Exception {
 		FileOutputStream out = new FileOutputStream("test.html");
+		if (charset_ == "UTF-16LE") {
+			out.write((byte) 0xFF);
+			out.write((byte) 0xFE);
+		} else if (charset_ == "UTF-32LE") {
+			out.write((byte) 0xFF);
+			out.write((byte) 0xFE);
+			out.write((byte) 0x00);
+			out.write((byte) 0x00);
+		} else if (charset_ == "UTF-8") {
+			out.write((byte) 0xEF);
+			out.write((byte) 0xBB);
+			out.write((byte) 0xBF);
+		} else {
+			throw new java.lang.Error("Unsupported encoding for unicode BOM");
+		}
 		out.write(e(header));
 		String test = new String("This is a test");
 		out.write(e("This is a test"));
