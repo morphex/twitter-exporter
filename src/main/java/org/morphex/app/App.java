@@ -6,6 +6,8 @@ import twitter4j.conf.ConfigurationBuilder;
 import java.util.List;
 import java.io.*;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 /**
  * Hello world!
  *
@@ -15,6 +17,7 @@ public class App
     public static void main( String[] args )
     {
         System.out.println("Starting Twitter dump");
+	String outputXHTML = "";
 	ConfigurationBuilder config = new ConfigurationBuilder();
 	config.setTweetModeExtended(true);
 	try {
@@ -25,11 +28,18 @@ public class App
 		for (Status status : twitter.getUserTimeline()) {
 			System.out.println(status.getText());
 			System.out.println("----------------------");
+			outputXHTML = outputXHTML + "<div class='tweet'>" +
+			  StringEscapeUtils.escapeXml10(status.getText()) +
+			  "</div>";
 		}
+		WriteXHTML.writeFile(outputXHTML);
 	} catch (TwitterException exception) {
 		exception.printStackTrace();
 		System.exit(-1);
 	} catch (IOException exception) {
+		exception.printStackTrace();
+		System.exit(-1);
+	} catch (Exception exception) {
 		exception.printStackTrace();
 		System.exit(-1);
 	}

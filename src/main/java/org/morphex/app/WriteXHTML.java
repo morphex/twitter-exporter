@@ -1,3 +1,5 @@
+package org.morphex.app;
+
 import java.io.*;
 import java.nio.charset.Charset;
 
@@ -11,8 +13,17 @@ public class WriteXHTML {
 		return toEncode.getBytes(charset_);
 	}
 
-	public static void main(String[] args)  throws Exception {
+	public static void writeFile(String html) throws Exception {
 		FileOutputStream out = new FileOutputStream("test.html");
+		out.write(e(header));
+		out.write(e(html));
+		out.write(e(footer));
+		out.close();
+	}
+
+	public static void main(String[] args)  throws Exception {
+		writeFile(("This is a test"));
+
 /*
 // Disabled because W3C validator won't validate with BOM
 		if (charset_ == "UTF-16LE") {
@@ -31,10 +42,5 @@ public class WriteXHTML {
 			throw new java.lang.Error("Unsupported encoding for unicode BOM");
 		}
 */
-		out.write(e(header));
-		String test = new String("This is a test");
-		out.write(e("This is a test"));
-		out.write(e(footer));
-		out.close();
 	}
 }
