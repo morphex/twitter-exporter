@@ -43,6 +43,7 @@ public class App
 		exception.printStackTrace();
 		System.exit(-1);
 	}
+	DetectURL.print();
     }
 
     private static void setup_credentials() {
