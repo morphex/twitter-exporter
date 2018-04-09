@@ -1,5 +1,72 @@
 import javax.net.ssl.*;
 import java.io.*;
+import java.util.Hashtable;
+import java.util.Set;
+import java.util.Scanner;
+
+class HashCache {
+
+	Hashtable<String,String> stash;
+	String filecache = null;
+
+	public HashCache() {
+		stash = new Hashtable<String, String>();
+	}
+	public HashCache(String file) throws Exception {
+		stash = new Hashtable<String, String>();
+		loadFromFile(file);
+		filecache = file;
+	}
+
+	public Boolean containsKey(String key) {
+		return stash.containsKey(key);
+	}
+
+	public String get(String key) {
+		return stash.get(key);
+	}
+
+	public void put(String key, String value) {
+		stash.put(key, value);
+		return;
+	}
+
+	private void loadFromFile(String file) throws Exception {
+		Scanner scanner = null;
+		try {
+			scanner = new Scanner(new File(file));
+		} catch (Exception exception) {
+			return;
+		}
+		String line;
+		String[] parts;
+		try {
+		while ((line = scanner.nextLine()) != null) {
+			parts = line.split("\\s");
+			stash.put(parts[0], parts[1]);
+		}
+		} catch (Exception exception) { assert true; }
+	}
+
+	private void writeToFile() throws IOException {
+		FileWriter file_ = new FileWriter(filecache);
+		Set<String> keys = stash.keySet();
+		for (String key:keys) {
+			file_.write(key);
+			file_.write(" ");
+			file_.write(stash.get(key));
+			file_.write("\n");
+			file_.flush();
+		}
+		file_.close();
+	}
+
+	public void flush() throws Exception {
+		if (filecache != null) {
+			writeToFile();
+		}
+	}
+}
 
 class SSLConnection {
 	SSLSocket socket;
@@ -8,6 +75,7 @@ class SSLConnection {
 	String host;
 	long lastRequest = 0;
 	int throttleSeconds = 1;
+	HashCache stash;
 
 	public SSLConnection(String host_) throws Exception {
 		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
@@ -18,6 +86,7 @@ class SSLConnection {
 			new OutputStreamWriter(socket.getOutputStream())));
 		receive = new BufferedReader(
 			new InputStreamReader(socket.getInputStream()));
+		stash = new HashCache("hash.cache");
 	}
 
 	void waitForRequest() throws Exception {
@@ -30,6 +99,9 @@ class SSLConnection {
 	}
 
 	String getRedirect(String path) throws Exception {
+		if (stash.containsKey(path)) {
+			return stash.get(path);
+		}
 		waitForRequest();
 		send.println("GET " + path + " HTTP/1.1");
 		send.println("Host: " + host);
@@ -45,7 +117,12 @@ class SSLConnection {
 				location = line.split("\\s")[1];
 			}
 		} while (!line.trim().isEmpty());
+		stash.put(path, location);
 		return location;
+	}
+
+	public void flush() throws Exception {
+		stash.flush();
 	}
 
 	protected void finalize() throws Throwable {
@@ -70,6 +147,7 @@ public class ResolveRedirect {
 			connection.getRedirect("/y21rFVTytt"));
 		System.out.println("Lo: " +
 			connection.getRedirect("/PpiGpYBpBw"));
+		connection.flush();
 		connection = null;
 	}
 }
