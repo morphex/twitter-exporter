@@ -6,6 +6,8 @@ class SSLConnection {
 	PrintWriter send;
 	BufferedReader receive;
 	String host;
+	long lastRequest = 0;
+	int throttleSeconds = 1;
 
 	public SSLConnection(String host_) throws Exception {
 		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
@@ -18,7 +20,17 @@ class SSLConnection {
 			new InputStreamReader(socket.getInputStream()));
 	}
 
-	String getRedirect(String path) throws IOException {
+	void waitForRequest() throws Exception {
+		// Also a place to place lock for multi-thread access
+		while ((System.currentTimeMillis() / 1000L) <
+			(lastRequest + throttleSeconds)) {
+			Thread.sleep(1000);
+		}
+		lastRequest = System.currentTimeMillis() / 1000L;
+	}
+
+	String getRedirect(String path) throws Exception {
+		waitForRequest();
 		send.println("GET " + path + " HTTP/1.1");
 		send.println("Host: " + host);
 		send.println();
@@ -54,6 +66,10 @@ public class ResolveRedirect {
 		SSLConnection connection = new SSLConnection("t.co");
 		System.out.println("Lo: " +
 			connection.getRedirect("/MdN9Zjwo43"));
+		System.out.println("Lo: " +
+			connection.getRedirect("/y21rFVTytt"));
+		System.out.println("Lo: " +
+			connection.getRedirect("/PpiGpYBpBw"));
 		connection = null;
 	}
 }
