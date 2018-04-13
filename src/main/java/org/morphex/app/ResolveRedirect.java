@@ -36,11 +36,11 @@ class HashCache {
 
 	private void loadFromFile(String file) throws Exception {
 		Scanner scanner = null;
-		try {
-			scanner = new Scanner(new File(file));
-		} catch (Exception exception) {
-			throw exception;
+		File file_ = new File(file);
+		if (!file_.exists()) {
+			file_.createNewFile();
 		}
+		scanner = new Scanner(file_);
 		String line;
 		String[] parts;
 		try {
