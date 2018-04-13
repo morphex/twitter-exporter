@@ -4,8 +4,11 @@ import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
 import com.linkedin.urls.Url;
 import java.util.*;
+import java.util.regex.*;
 
 public class DetectURL {
+	static Pattern re_url = Pattern.compile("(http|https)://.*?(\\z|$|\\s)");
+
 	public static void main(String[] args) {
 		print();
 	}
@@ -17,6 +20,14 @@ public class DetectURL {
 		for (Url url : urls) {
 			URLStrings.add(url.toString());
 		}
+                Matcher matcher = re_url.matcher(text);
+		String mURL = "";
+                while (matcher.find()) {
+                        mURL = text.substring(matcher.start(), matcher.end()).trim();
+			if (!URLStrings.contains(mURL)) {
+				URLStrings.add(mURL);
+			}
+                }
 		return URLStrings;
 	}
         public static void print() {
