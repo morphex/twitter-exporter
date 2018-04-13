@@ -41,34 +41,40 @@ class TwitterStatusFetcher {
  */
 public class App
 {
+    static ConfigurationBuilder config = null;
+    static String outputXHTML = "";
+    static ResolveRedirect resolver;
+
     public static String URLtoHTML(String URL) {
         return "<a href='" + URL + "'>" + URL + "</a>";
     }
 
-    public static String expandURL(URLEntity[] urls, String url) {
+    public static String expandURL(URLEntity[] urls, String url) throws Exception {
         for (URLEntity JSONURL: urls) {
             if (JSONURL.getURL().toString().equals(url)) {
                 return JSONURL.getExpandedURL().toString();
             }
+	    if (url.startsWith("https://t.co")) {
+		// We have a URL which hasn't been included in the
+		// Tweet metadata
+		String newURL = resolver.getRedirectFromURL(url);
+		if (!newURL.trim().isEmpty()) {
+		    return newURL;
+		}
+	    }
         }
         return url;
     }
 
-    public static void main( String[] args )
+
+    public static void main( String[] args ) throws Exception
     {
         System.out.println("Starting Twitter dump");
-	String outputXHTML = "";
-	ConfigurationBuilder config = new ConfigurationBuilder();
+	config = new ConfigurationBuilder();
 	config.setTweetModeExtended(true);
-/*
-	Not necessary to resolve URLs as expanded versions are included in the tweet
-	ResolveRedirect resolver = null;
-	try {
-		resolver = new ResolveRedirect("t.co");
-	} catch (Exception exeption) {
-		assert true;
-	}
-*/
+	// Not necessary to resolve URLs as expanded versions are included in the tweet
+	// Update: Some shortened URLs are not included in Tweet metadata
+	resolver = new ResolveRedirect("t.co");
 	try {
 	        setup_credentials();
 		Twitter twitter = new TwitterFactory(config.build()).getInstance();
@@ -78,10 +84,6 @@ public class App
 		Integer count = 0;
 		Status status = fetcher.getNextStatus();
 		while (status != null) {
-		// for (Status status : twitter.getUserTimeline()) {
-			// System.out.println(status.getText());
-			// System.out.println(status);
-			// System.out.flush();
 			String statusText = status.getText();
 			ArrayList urls = DetectURL.getURLs(statusText);
 			outputXHTML = outputXHTML + "\n<div class='tweet'>" +
@@ -103,6 +105,7 @@ public class App
 			status = fetcher.getNextStatus();
 			// Thread.sleep(2000);
 			count += 1;
+			// Safeguard for testing
 			if (count >= 50) {
 				break;
 			}
@@ -119,7 +122,6 @@ public class App
 		System.exit(-1);
 	} finally {
 		// To write hash cache stash
-		/*
 		if (resolver != null) {
 			try {
 				resolver.flush();
@@ -128,7 +130,6 @@ public class App
 			}
 			resolver = null;
 		}
-		*/
 	}
     }
 
