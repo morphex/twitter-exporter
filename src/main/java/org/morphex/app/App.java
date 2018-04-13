@@ -14,12 +14,22 @@ import org.apache.commons.text.StringEscapeUtils;
  */
 public class App
 {
+    public static String URLtoHTML(String URL) {
+        return "<a href='" + URL + "'>" + URL + "</a>";
+    }
+
     public static void main( String[] args )
     {
         System.out.println("Starting Twitter dump");
 	String outputXHTML = "";
 	ConfigurationBuilder config = new ConfigurationBuilder();
 	config.setTweetModeExtended(true);
+	ResolveRedirect resolver = null;
+	try {
+		resolver = new ResolveRedirect("t.co");
+	} catch (Exception exeption) {
+		assert true;
+	}
 	try {
 	        setup_credentials();
 		Twitter twitter = new TwitterFactory(config.build()).getInstance();
@@ -28,10 +38,17 @@ public class App
 		for (Status status : twitter.getUserTimeline()) {
 			System.out.println(status.getText());
 			System.out.println("----------------------");
-			outputXHTML = outputXHTML + "<div class='tweet'>" +
-			  StringEscapeUtils.escapeXml10(status.getText()) +
+			String statusText = status.getText();
+			ArrayList urls = DetectURL.getURLs(statusText);
+			outputXHTML = outputXHTML + "\n<div class='tweet'>" +
+			  StringEscapeUtils.escapeXml10(statusText) +
 			  "</div>";
-			ArrayList urls = DetectURL.getURLs(status.getText());
+			String redirectURL = "";
+			for (Object url : urls) {
+				redirectURL = resolver.getRedirectFromURL(url.toString());
+				redirectURL = URLtoHTML(redirectURL);
+				outputXHTML = outputXHTML.replace(url.toString(), redirectURL);
+			}
 			System.out.print("Detected URLs: ");
 			System.out.print(String.join(",",urls));
 			System.out.print("\n");
@@ -46,8 +63,17 @@ public class App
 	} catch (Exception exception) {
 		exception.printStackTrace();
 		System.exit(-1);
+	} finally {
+		// To write hash cache stash
+		if (resolver != null) {
+			try {
+				resolver.flush();
+			} catch (Exception exception) {
+				assert true;
+			}
+			resolver = null;
+		}
 	}
-	DetectURL.print();
     }
 
     private static void setup_credentials() {

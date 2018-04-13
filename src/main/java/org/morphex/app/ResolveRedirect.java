@@ -1,3 +1,5 @@
+package org.morphex.app;
+
 import javax.net.ssl.*;
 import java.io.*;
 import java.util.Hashtable;
@@ -145,6 +147,22 @@ class SSLConnection {
 }
 
 public class ResolveRedirect {
+	SSLConnection connection;
+
+	public String getRedirect(String path) throws Exception {
+		return connection.getRedirect(path);
+	}
+
+	public String getRedirectFromURL(String url) throws Exception {
+		return connection.getRedirectFromURL(url);
+	}
+
+	public ResolveRedirect(String host) throws Exception {
+		connection = new SSLConnection(host);
+	}
+	public void flush() throws Exception {
+		connection.flush();
+	}
 
 	public static void main(String[] args) throws Exception {
 		SSLConnection connection = new SSLConnection("t.co");
