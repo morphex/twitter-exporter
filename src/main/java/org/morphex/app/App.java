@@ -3,7 +3,7 @@ package org.morphex.app;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
 import twitter4j.conf.ConfigurationBuilder;
-import java.util.List;
+import java.util.ArrayList;
 import java.io.*;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -31,6 +31,10 @@ public class App
 			outputXHTML = outputXHTML + "<div class='tweet'>" +
 			  StringEscapeUtils.escapeXml10(status.getText()) +
 			  "</div>";
+			ArrayList urls = DetectURL.getURLs(status.getText());
+			System.out.print("Detected URLs: ");
+			System.out.print(String.join(",",urls));
+			System.out.print("\n");
 		}
 		WriteXHTML.writeFile(outputXHTML);
 	} catch (TwitterException exception) {
