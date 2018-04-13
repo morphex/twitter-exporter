@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Scanner;
+import java.net.URL;
 
 class HashCache {
 
@@ -98,6 +99,12 @@ class SSLConnection {
 		lastRequest = System.currentTimeMillis() / 1000L;
 	}
 
+	String getRedirectFromURL(String url) throws Exception {
+		// Only gets the path, host has been set earlier
+		URL url_ = new URL(url);
+		return getRedirect(url_.getPath());
+	}
+
 	String getRedirect(String path) throws Exception {
 		if (stash.containsKey(path)) {
 			return stash.get(path);
@@ -146,7 +153,7 @@ public class ResolveRedirect {
 		System.out.println("Lo: " +
 			connection.getRedirect("/y21rFVTytt"));
 		System.out.println("Lo: " +
-			connection.getRedirect("/PpiGpYBpBw"));
+			connection.getRedirectFromURL("https://t.co/PpiGpYBpBw"));
 		connection.flush();
 		connection = null;
 	}
