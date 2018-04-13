@@ -85,6 +85,7 @@ public class App
 			String statusText = status.getText();
 			ArrayList urls = DetectURL.getURLs(statusText);
 			outputXHTML = outputXHTML + "\n<div class='tweet'>" +
+			  status.getCreatedAt().toString() + "&nbsp;" + 
 			  StringEscapeUtils.escapeXml10(statusText) +
 			  "</div>";
 			String redirectURL = "";
@@ -101,12 +102,10 @@ public class App
 			// System.out.print("\n");
 			status = fetcher.getNextStatus();
 			// Thread.sleep(2000);
-			/* Safeguard when testing
 			count += 1;
 			if (count >= 50) {
 				break;
 			}
-			*/
 		}
 		WriteXHTML.writeFile(outputXHTML);
 	} catch (TwitterException exception) {

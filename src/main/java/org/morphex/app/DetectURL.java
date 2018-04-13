@@ -21,7 +21,7 @@ public class DetectURL {
 	}
         public static void print() {
 		// Test code
-		String data = "asdf https://t.co fdsa";
+		String data = "asdf https://t.co fdsa :)https://t.co/ff";
 		UrlDetector parser = new UrlDetector(data,
 			UrlDetectorOptions.Default);
 		List<Url> urls = parser.detect();
