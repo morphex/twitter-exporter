@@ -39,7 +39,7 @@ class HashCache {
 		try {
 			scanner = new Scanner(new File(file));
 		} catch (Exception exception) {
-			return;
+			throw exception;
 		}
 		String line;
 		String[] parts;
@@ -81,15 +81,19 @@ class SSLConnection {
 	HashCache stash;
 
 	public SSLConnection(String host_) throws Exception {
+		host = host_;
+		initializeConnection(host_);
+		stash = new HashCache("hash.cache");
+	}
+
+	public void initializeConnection(String host_) throws Exception {
 		SSLSocketFactory factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 		SSLSocket socket = (SSLSocket)factory.createSocket(host_, 443);
 		socket.startHandshake();
-		host = host_;
 		send = new PrintWriter(new BufferedWriter(
 			new OutputStreamWriter(socket.getOutputStream())));
 		receive = new BufferedReader(
 			new InputStreamReader(socket.getInputStream()));
-		stash = new HashCache("hash.cache");
 	}
 
 	void waitForRequest() throws Exception {
@@ -104,7 +108,27 @@ class SSLConnection {
 	String getRedirectFromURL(String url) throws Exception {
 		// Only gets the path, host has been set earlier
 		URL url_ = new URL(url);
-		return getRedirect(url_.getPath());
+		if (!url_.getHost().equals(host)) {
+			System.out.println("Skipping URL " + url);
+			System.out.println(url_.getHost());
+			System.out.println(host);
+			flush(); // Save URLs so far
+			System.exit(-1);
+			return url;
+		}
+		try {
+			return getRedirect(url_.getPath());
+		} catch (javax.net.ssl.SSLException exception) {
+			System.out.print("Failed on: " + url + "\n");
+			// Connection, failure, wait 5 seconds and re-open connection
+			Thread.sleep(5000);
+			initializeConnection(host);
+			return url;
+		} catch (Exception exception) {
+			System.out.print("Failed on: " + url + "\n");
+			flush();
+			throw exception;
+		}
 	}
 
 	String getRedirect(String path) throws Exception {
@@ -112,18 +136,38 @@ class SSLConnection {
 			return stash.get(path);
 		}
 		waitForRequest();
-		send.println("GET " + path + " HTTP/1.1");
-		send.println("Host: " + host);
-		send.println();
-		send.flush();
+		try {
+			send.println("GET " + path + " HTTP/1.1");
+			send.println("Host: " + host);
+			send.println();
+			send.flush();
+		} catch (Exception exception) {
+			System.out.println("Exception in fetching redirect URL");
+	                exception.printStackTrace();
+			// So all URLs so far are saved
+			flush();
+			throw exception; // So we can see longer up what the full URL is for example
+		}
 		String line = "";
 		String location = "";
 		do {
 			// System.out.println(line);
 			// System.out.println("Before readLine..");
-			line = receive.readLine();
-			if (line.toLowerCase().startsWith("location:")) {
-				location = line.split("\\s")[1];
+			try {
+				line = receive.readLine();
+				if (line.toLowerCase().startsWith("location:")) {
+					location = line.split("\\s")[1];
+					if (location.trim().isEmpty()) {
+						System.out.println("Empty location: " + line);
+						Thread.sleep(10000);
+					}
+				}
+			} catch (Exception exception) {
+				System.out.println("Exception in fetching redirect URL");
+		                exception.printStackTrace();
+				// So all URLs so far are saved
+				flush();
+				throw exception; // So we can see longer up what the full URL is for example
 			}
 		} while (!line.trim().isEmpty());
 		stash.put(path, location);
