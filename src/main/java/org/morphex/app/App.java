@@ -54,18 +54,17 @@ public class App
             if (JSONURL.getURL().toString().equals(url)) {
                 return JSONURL.getExpandedURL().toString();
             }
-	    if (url.startsWith("https://t.co")) {
+        }
+	if (url.startsWith("https://t.co")) {
 		// We have a URL which hasn't been included in the
 		// Tweet metadata
 		String newURL = resolver.getRedirectFromURL(url);
 		if (!newURL.trim().isEmpty()) {
 		    return newURL;
 		}
-	    }
-        }
+	}
         return url;
     }
-
 
     public static void main( String[] args ) throws Exception
     {
