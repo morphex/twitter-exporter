@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.io.*;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.codec.EncoderException;
 
 class TwitterStatusFetcher {
 	Twitter twitter;
@@ -44,8 +46,10 @@ public class App
     static ConfigurationBuilder config = null;
     static String outputXHTML = "";
     static ResolveRedirect resolver;
+    static URLCodec URLEncoder = new URLCodec();
 
-    public static String URLtoHTML(String URL) {
+    public static String URLtoHTML(String URL) throws EncoderException {
+	URL = URLEncoder.encode(URL);
         return "<a href='" + URL + "'>" + URL + "</a>";
     }
 
@@ -105,7 +109,7 @@ public class App
 			// Thread.sleep(2000);
 			count += 1;
 			// Safeguard for testing
-			if (count >= 50) {
+			if (count >= 50 && true) {
 				break;
 			}
 		}
